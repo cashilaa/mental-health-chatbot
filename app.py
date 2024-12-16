@@ -2,7 +2,6 @@ import os
 from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
 from dotenv import load_dotenv
-import time
 
 # Load environment variables
 load_dotenv()
@@ -25,20 +24,11 @@ def get_mental_health_response(prompt):
     
     full_prompt = f"{context}\n\nUser Query: {prompt}"
     
-    max_retries = 3
-    retry_delay = 5  # seconds
-    
-    for attempt in range(max_retries):
-        try:
-            response = model.generate_content(full_prompt)
-            return response.text
-        except Exception as e:
-            if "rate limit exceeded" in str(e).lower():
-                if attempt < max_retries - 1:
-                    time.sleep(retry_delay)
-                    continue
-                return "I'm currently experiencing high demand. Please try again in a few moments. If you need immediate assistance, please contact a mental health professional or emergency services."
-            return "I apologize, but I'm having trouble processing your request. Please try again or seek professional help if you're in crisis."
+    try:
+        response = model.generate_content(full_prompt)
+        return response.text
+    except Exception as e:
+        return f"I apologize, but I'm having trouble processing your request. Please try again or seek professional help if you're in crisis."
 
 @app.route('/')
 def home():
@@ -56,5 +46,4 @@ def chat():
     return jsonify({'response': response})
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
